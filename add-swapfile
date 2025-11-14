@@ -1,0 +1,18 @@
+# Clean up old
+sudo swapoff /swapfile 2>/dev/null || true
+sudo rm -f /swapfile
+
+# Create Btrfs-safe 12G swapfile
+sudo touch /swapfile
+sudo chattr +C /swapfile
+sudo fallocate -l 12G /swapfile
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+
+# Make persistent
+echo '/swapfile none swap defaults,pri=10 0 0' | sudo tee -a /etc/fstab
+
+# Verify
+sudo swapon --show
+free -h
