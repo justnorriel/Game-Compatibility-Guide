@@ -1,0 +1,32 @@
+# 1. Download + extract official installer
+curl -O https://mirror.cachyos.org/cachyos-repo.tar.xz
+tar xvf cachyos-repo.tar.xz && cd cachyos-repo
+
+# 2. Run automated setup (handles keys, repos, arch check)
+sudo ./cachyos-repo.sh
+
+# 3. Install CachyOS kernel + headers
+sudo pacman -S --noconfirm linux-cachyos linux-cachyos-headers
+
+# 4. Update bootloader (systemd-boot)
+sudo bootctl update
+
+# 5. Create boot entry for CachyOS (auto-detects your root)
+ROOT_UUID=$(blkid -s PARTUUID -o value $(df / --output=source | tail -1))
+sudo tee /boot/loader/entries/cachyos.conf > /dev/null << EOF
+title   CachyOS Kernel
+linux   /vmlinuz-linux-cachyos
+initrd  /initramfs-linux-cachyos.img
+options root=PARTUUID=$ROOT_UUID rw
+EOF
+
+# 6. Set as default
+sudo tee -a /boot/loader/loader.conf > /dev/null << EOF
+default cachyos.conf
+EOF
+
+# Cleanup
+cd .. && rm -rf cachyos-repo.tar.xz cachyos-repo
+
+echo "CachyOS kernel installed! Rebooting..."
+reboot
